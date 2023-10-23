@@ -8,15 +8,28 @@
 import SwiftUI
 
 struct ContentView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+    @State private var showDoIt = false
+        @State private var message: String? = nil
+        
+        var body: some View {
+            VStack(spacing: 20) {
+                Button("Inspire me") {
+                    // Toggle the message each time the button is pressed
+                    showDoIt.toggle()
+                    message = showDoIt ? "do it!" : "DO IT!"
+                }
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+
+                // Conditionally display the message
+                if let messageToShow = message {
+                    Text(messageToShow)
+                }
+            }
+            .padding()
         }
-        .padding()
-    }
 }
 
 #Preview {
