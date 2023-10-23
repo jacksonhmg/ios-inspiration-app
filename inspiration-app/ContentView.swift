@@ -29,7 +29,7 @@ class AudioManager: ObservableObject {
     private var audioPlayer: AVAudioPlayer?
 
         // ... (same code as before)
-        func playInspirationAudio() {
+    func playInspirationAudio(quote: String) {
             let url = URL(string: "https://api.elevenlabs.io/v1/text-to-speech/W4FK71cS2ISzpdIlRaFe")!
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
@@ -44,10 +44,14 @@ class AudioManager: ObservableObject {
             }
             
             // Set data (modify this if you want to use the selected quote as text)
-            let dataPayload: [String: Any] = [
-                "text": "Hi! My name is Bella, nice to meet you!",
-                // ... (rest of your payload)
+        let dataPayload: [String: Any] = [
+            "text": quote,
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": [
+                "stability": 0.5,
+                "similarity_boost": 0.75
             ]
+        ]
             request.httpBody = try? JSONSerialization.data(withJSONObject: dataPayload, options: .prettyPrinted)
             
             let task = URLSession.shared.dataTask(with: request) { data, response, error in
@@ -115,7 +119,9 @@ struct ContentView: View {
                 // Select a random quote from the list
                 selectedQuote = quotes.randomElement()
                 
-                audioManager.playInspirationAudio()
+                if let selected = selectedQuote {
+                    audioManager.playInspirationAudio(quote: selected)
+                }
             }
             .padding()
             .background(Color.blue)
@@ -135,3 +141,4 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
+
