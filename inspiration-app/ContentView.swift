@@ -30,6 +30,14 @@ class AudioManager: ObservableObject {
 
         // ... (same code as before)
     func playInspirationAudio(quote: String) {
+            do {
+                    try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+                    try AVAudioSession.sharedInstance().setActive(true)
+                } catch {
+                    print("Setting category to AVAudioSessionCategoryPlayback failed.")
+                }
+        
+        
             let url = URL(string: "https://api.elevenlabs.io/v1/text-to-speech/W4FK71cS2ISzpdIlRaFe")!
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
