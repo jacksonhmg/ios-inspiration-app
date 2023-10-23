@@ -6,8 +6,13 @@
 //
 
 import SwiftUI
+import AVFoundation
+
 
 struct ContentView: View {
+    private var audioPlayer: AVAudioPlayer?
+
+    
     @State private var quotes = [
     "There is nothing impossible to him who will try.",
     "I am indebted to my father for living, but to my teacher for living well.",
@@ -28,12 +33,55 @@ struct ContentView: View {
 ]
 
     @State private var selectedQuote: String? = nil
+    
+    
+    func playInspirationAudio() {
+            let url = URL(string: "https://api.elevenlabs.io/v1/text-to-speech/<voice-id>")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            
+            // Set headers
+            request.addValue("audio/mpeg", forHTTPHeaderField: "Accept")
+            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.addValue("<xi-api-key>", forHTTPHeaderField: "xi-api-key")
+            
+            // Set data (modify this if you want to use the selected quote as text)
+            let dataPayload: [String: Any] = [
+                "text": "Hi! My name is Bella, nice to meet you!",
+                // ... (rest of your payload)
+            ]
+            request.httpBody = try? JSONSerialization.data(withJSONObject: dataPayload, options: .prettyPrinted)
+            
+            let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+                guard let data = data else {
+                    print("Error fetching data:", error ?? "Unknown error")
+                    return
+                }
+                
+                do {
+                    self?.audioPlayer = try AVAudioPlayer(data: data)
+                    self?.audioPlayer?.prepareToPlay()
+                    self?.audioPlayer?.play()
+                } catch {
+                    print("Error playing audio:", error)
+                }
+            }
+            
+            task.resume()
+        }
+    
+    
+    
+    
         
     var body: some View {
         VStack(spacing: 20) {
             Button("Inspire me") {
                 // Select a random quote from the list
                 selectedQuote = quotes.randomElement()
+                
+                playInspirationAudio()
+
             }
             .padding()
             .background(Color.blue)
