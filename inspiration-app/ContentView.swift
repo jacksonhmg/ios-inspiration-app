@@ -7,10 +7,78 @@
 
 import SwiftUI
 import AVFoundation
+import Combine
+
+
+class Config {
+    static let shared = Config()
+    
+    var xiApiKey: String?
+    
+    private init() {
+        if let path = Bundle.main.path(forResource: "Config", ofType: "plist"),
+           let dict = NSDictionary(contentsOfFile: path) as? [String: AnyObject] {
+            xiApiKey = dict["xi-api-key"] as? String
+        }
+    }
+}
+
+
+
+class AudioManager: ObservableObject {
+    private var audioPlayer: AVAudioPlayer?
+
+        // ... (same code as before)
+        func playInspirationAudio() {
+            let url = URL(string: "https://api.elevenlabs.io/v1/text-to-speech/W4FK71cS2ISzpdIlRaFe")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            
+            // Set headers
+            request.addValue("audio/mpeg", forHTTPHeaderField: "Accept")
+            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+            if let apiKey = Config.shared.xiApiKey {
+                request.addValue(apiKey, forHTTPHeaderField: "xi-api-key")
+            } else {
+                print("Error: Couldn't retrieve the API key")
+            }
+            
+            // Set data (modify this if you want to use the selected quote as text)
+            let dataPayload: [String: Any] = [
+                "text": "Hi! My name is Bella, nice to meet you!",
+                // ... (rest of your payload)
+            ]
+            request.httpBody = try? JSONSerialization.data(withJSONObject: dataPayload, options: .prettyPrinted)
+            
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                guard let data = data else {
+                    print("Error fetching data:", error ?? "Unknown error")
+                    return
+                }
+                
+                do {
+                        self.audioPlayer = try AVAudioPlayer(data: data)  // This line was missing.
+                        DispatchQueue.main.async {
+                            self.audioPlayer?.prepareToPlay()
+                            self.audioPlayer?.play()
+                        }
+                    } catch {
+                        print("Error playing audio:", error)
+                    }
+            }
+            
+            task.resume()
+        }
+}
+
+
+
+
+
 
 
 struct ContentView: View {
-    private var audioPlayer: AVAudioPlayer?
+    private var audioManager = AudioManager()
 
     
     @State private var quotes = [
@@ -35,40 +103,7 @@ struct ContentView: View {
     @State private var selectedQuote: String? = nil
     
     
-    mutating func playInspirationAudio() {
-        let url = URL(string: "https://api.elevenlabs.io/v1/text-to-speech/W4FK71cS2ISzpdIlRaFe")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        
-        // Set headers
-        request.addValue("audio/mpeg", forHTTPHeaderField: "Accept")
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.addValue("<xi-api-key>", forHTTPHeaderField: "xi-api-key")
-        
-        // Set data (modify this if you want to use the selected quote as text)
-        let dataPayload: [String: Any] = [
-            "text": "Hi! My name is Bella, nice to meet you!",
-            // ... (rest of your payload)
-        ]
-        request.httpBody = try? JSONSerialization.data(withJSONObject: dataPayload, options: .prettyPrinted)
-        
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data else {
-                print("Error fetching data:", error ?? "Unknown error")
-                return
-            }
-            
-            do {
-                self.audioPlayer = try AVAudioPlayer(data: data)
-                self.audioPlayer?.prepareToPlay()
-                self.audioPlayer?.play()
-            } catch {
-                print("Error playing audio:", error)
-            }
-        }
-        
-        task.resume()
-    }
+    
     
     
     
@@ -80,8 +115,7 @@ struct ContentView: View {
                 // Select a random quote from the list
                 selectedQuote = quotes.randomElement()
                 
-                playInspirationAudio()
-
+                audioManager.playInspirationAudio()
             }
             .padding()
             .background(Color.blue)
