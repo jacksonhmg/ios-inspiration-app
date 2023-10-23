@@ -35,40 +35,40 @@ struct ContentView: View {
     @State private var selectedQuote: String? = nil
     
     
-    func playInspirationAudio() {
-            let url = URL(string: "https://api.elevenlabs.io/v1/text-to-speech/<voice-id>")!
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            
-            // Set headers
-            request.addValue("audio/mpeg", forHTTPHeaderField: "Accept")
-            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.addValue("<xi-api-key>", forHTTPHeaderField: "xi-api-key")
-            
-            // Set data (modify this if you want to use the selected quote as text)
-            let dataPayload: [String: Any] = [
-                "text": "Hi! My name is Bella, nice to meet you!",
-                // ... (rest of your payload)
-            ]
-            request.httpBody = try? JSONSerialization.data(withJSONObject: dataPayload, options: .prettyPrinted)
-            
-            let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-                guard let data = data else {
-                    print("Error fetching data:", error ?? "Unknown error")
-                    return
-                }
-                
-                do {
-                    self?.audioPlayer = try AVAudioPlayer(data: data)
-                    self?.audioPlayer?.prepareToPlay()
-                    self?.audioPlayer?.play()
-                } catch {
-                    print("Error playing audio:", error)
-                }
+    mutating func playInspirationAudio() {
+        let url = URL(string: "https://api.elevenlabs.io/v1/text-to-speech/W4FK71cS2ISzpdIlRaFe")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        
+        // Set headers
+        request.addValue("audio/mpeg", forHTTPHeaderField: "Accept")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.addValue("<xi-api-key>", forHTTPHeaderField: "xi-api-key")
+        
+        // Set data (modify this if you want to use the selected quote as text)
+        let dataPayload: [String: Any] = [
+            "text": "Hi! My name is Bella, nice to meet you!",
+            // ... (rest of your payload)
+        ]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: dataPayload, options: .prettyPrinted)
+        
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            guard let data = data else {
+                print("Error fetching data:", error ?? "Unknown error")
+                return
             }
             
-            task.resume()
+            do {
+                self.audioPlayer = try AVAudioPlayer(data: data)
+                self.audioPlayer?.prepareToPlay()
+                self.audioPlayer?.play()
+            } catch {
+                print("Error playing audio:", error)
+            }
         }
+        
+        task.resume()
+    }
     
     
     
